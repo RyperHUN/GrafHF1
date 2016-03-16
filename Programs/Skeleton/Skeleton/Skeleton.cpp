@@ -54,6 +54,7 @@ const unsigned int windowWidth = 600, windowHeight = 600;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Innentol modosithatod...
 
+//Verziokezelés tesztü
 // OpenGL major and minor versions
 int majorVersion = 3, minorVersion = 0;
 
