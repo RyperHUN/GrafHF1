@@ -1004,7 +1004,7 @@ public:
 		unsigned int vbo;
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		//asd
+
 		glBufferData(GL_ARRAY_BUFFER,      // copy to the GPU
 			sizeof(coords), // number of the vbo in bytes
 			coords,		   // address of the data array on the CPU
