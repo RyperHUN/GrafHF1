@@ -111,7 +111,7 @@ public:
 	}
 	void push_back(const T& newElem)
 	{
-		if (_size >= _capacity) // Ekkor kell helyfoglalás!!!!
+		if (_size >= _capacity - 1) // Ekkor kell helyfoglalás!!!!
 		{
 			reserve(_capacity + _capacityIncrease); // _capacityIncrease el növeli a méretet
 		}
@@ -127,6 +127,7 @@ public:
 	void clear()
 	{
 		_size = 0;
+
 		delete[] _elements;
 	}
 	void clearCreate()
@@ -135,6 +136,10 @@ public:
 		_elements = new T[_capacity];
 	}
 
+	void push_secret(const T& newElem)
+	{
+		_elements[_size] = newElem;
+	}
 	int size() const
 	{
 		return _size;
@@ -836,10 +841,6 @@ class CatmullRom {
 	Vector<vec4> cps;
 	Vector<float> ts;
 	Vector<vec4> seb;
-	vec4 lastcps;
-	float lastts;
-	vec4 lastseb;
-
 
 	vec4 Hermite(vec4 p0, vec4 v0, float t0,
 		vec4 p1, vec4 v1, float t1,
@@ -858,23 +859,16 @@ class CatmullRom {
 
 		//return eredmeny;
 	}
-	float tenzio = -0.8f; // Egyellore legyen 1
+	float tenzio = 1.0f; // Egyellore legyen 1
 
 	LineStrip _lineStrip;
-	float firstTime;
 public:
 	bool animalhato;
 	vec4 sebesseg;
 	float getBiggestTime()
 	{
 		if (animalhato)
-			return ts[cps.size()-1];
-		return 0.0f;
-	}
-	float getSmallestTime()
-	{
-		if (animalhato)
-			return ts[0];
+			return ts[cps.size()];
 		return 0.0f;
 	}
 	CatmullRom() : sebesseg(0.2f, 0.2f)
@@ -893,7 +887,7 @@ public:
 		ts.push_back(t);
 
 		AddControlPoint(x, y, t);
-
+		seb.push_back(sebesseg);
 		//copyPointsToGPU();
 	}
 	void addClickPoint(float x, float y, float t) {
@@ -903,15 +897,7 @@ public:
 		wVertex = (camera.Vinv()) *camera.Pinv()  * wVertex;
 
 		cps.push_back(wVertex);
-		if (ts.size() == 0)
-		{
-			ts.push_back(0);
-			firstTime = t;
-		}
-		else
-		{
-			ts.push_back(t - firstTime);
-		}
+		ts.push_back(t);
 
 		AddControlPoint(x, y, t);
 		//copyPointsToGPU();
@@ -922,76 +908,56 @@ public:
 	{
 		//Pont már hozzávan adva!!! Sebesség még nem!!!!
 		
+		
+		//Ha már van 3 pont akkor kiszámolom a sebességeket!
 		if (cps.size() >= 3)
 		{
 			animalhato = true;
+			//Visszacsavarás
 
-			vec4 elsoSeb =  ((cps[cps.size() - 1] - cps[0])*(1 / (ts[1] - ts[0])) + (cps[1] - cps[cps.size() - 1])*(1 / (ts[0] - ts[cps.size() - 1]))) * ((1.0f - tenzio) / 2.0f);
+			float utolsoSec = ts[ts.size() - 1];
+			cps.push_secret(cps[0]);
+			ts.push_secret(utolsoSec + 0.5f);
+			seb.push_secret(sebesseg);
+
+			int maxIndex = cps.size();
+
+			vec4 elsoSeb = ((cps[maxIndex] - cps[0])*(1 / (ts[1] - ts[0])) + (cps[1] - cps[maxIndex])*(1 / (ts[0] - ts[maxIndex]))) * 0.9f * tenzio;
 			seb[0] = elsoSeb;
-			for (int i = 1; i < cps.size() - 1; i++) // Csak kozepsonek szamol sebességet
+			for (int i = 1; i < maxIndex; i++) // Csak kozepsonek szamol sebességet
 			{
 				vec4 ujseb;
-				ujseb = ((cps[i] - cps[i - 1]) / (ts[i] - ts[i - 1]) + (cps[i + 1] - cps[i]) / (ts[i + 1] - ts[i])) * ((1.0f - tenzio) / 2.0f); // Boldi fele
-																																   //ujseb = ((cps[i+1] - cps[i])*(1/(ts[i+1] - ts[i])) + (cps[i] - cps[i-1])*(1/(ts[i] - ts[i-1]))) * 0.5f * tenzio;
+				ujseb = ((cps[i] - cps[i - 1]) / (ts[i] - ts[i - 1]) + (cps[i + 1] - cps[i]) / (ts[i + 1] - ts[i])) * 0.9f * 0.9f; // Boldi fele
+				//ujseb = ((cps[i+1] - cps[i])*(1/(ts[i+1] - ts[i])) + (cps[i] - cps[i-1])*(1/(ts[i] - ts[i-1]))) * 0.5f * tenzio;
 				seb[i] = ujseb;
 			}
-			vec4 utolsoSeb = ((cps[0] - cps[cps.size() - 1])*(1 / (ts[0] - ts[cps.size() - 1])) + (cps[cps.size() - 1] - cps[cps.size() - 2])*(1 / (ts[cps.size() - 1] - ts[cps.size() - 2]))) * ((1.0f - tenzio) / 2.0f);
-			seb[cps.size() - 1] = utolsoSeb;
+			vec4 utolsoSeb = ((cps[0] - cps[maxIndex])*(1 / (ts[0] - ts[maxIndex])) + (cps[maxIndex] - cps[maxIndex - 1])*(1 / (ts[maxIndex] - ts[maxIndex-1]))) * 0.9f;
+			//vec4 utolsoSeb = ((cps[0] - cps[cps.size() - 1])*(1 / (ts[0] - ts[cps.size() - 1])) + (cps[cps.size() - 1] - cps[cps.size() - 2])*(1 / (ts[cps.size() - 1] - ts[cps.size() - 2]))) * 0.9f;
+			seb[maxIndex] = utolsoSeb;
 
 			reCalcSpine();
 		}
-		
-		///OLD ONE /////////////
-		//Ha már van 3 pont akkor kiszámolom a sebességeket!
-		//if (cps.size() >= 3)
-		//{
-		//	animalhato = true;
-		//	//Visszacsavarás
-
-		//	//float utolsoSec = ts[ts.size() - 1];
-		//	//cps.push_secret(cps[0]);
-		//	//ts.push_secret(utolsoSec + 0.5f);
-		//	//seb.push_secret(sebesseg);
-
-		//	int maxIndex = cps.size();
-
-		//	vec4 elsoSeb = ((cps[maxIndex] - cps[0])*(1 / (ts[1] - ts[0])) + (cps[1] - cps[maxIndex])*(1 / (ts[0] - ts[maxIndex]))) * 0.9f * tenzio;
-		//	seb[0] = elsoSeb;
-		//	for (int i = 1; i < maxIndex; i++) // Csak kozepsonek szamol sebességet
-		//	{
-		//		vec4 ujseb;
-		//		ujseb = ((cps[i] - cps[i - 1]) / (ts[i] - ts[i - 1]) + (cps[i + 1] - cps[i]) / (ts[i + 1] - ts[i])) * 0.9f * 0.9f; // Boldi fele
-		//																														   //ujseb = ((cps[i+1] - cps[i])*(1/(ts[i+1] - ts[i])) + (cps[i] - cps[i-1])*(1/(ts[i] - ts[i-1]))) * 0.5f * tenzio;
-		//		seb[i] = ujseb;
-		//	}
-		//	vec4 utolsoSeb = ((cps[0] - cps[maxIndex])*(1 / (ts[0] - ts[maxIndex])) + (cps[maxIndex] - cps[maxIndex - 1])*(1 / (ts[maxIndex] - ts[maxIndex - 1]))) * 0.9f;
-		//	//vec4 utolsoSeb = ((cps[0] - cps[cps.size() - 1])*(1 / (ts[0] - ts[cps.size() - 1])) + (cps[cps.size() - 1] - cps[cps.size() - 2])*(1 / (ts[cps.size() - 1] - ts[cps.size() - 2]))) * 0.9f;
-		//	seb[maxIndex] = utolsoSeb;
-
-		//	reCalcSpine();
-		//}
 	}
 	void reCalcSpine()
 	{
 		_lineStrip.clearPoints();
-		int maxIndex = ts.size() - 1;
-		for (float t = ts[0]; t < ts[maxIndex]; t += 0.02f)
+		int maxIndex = ts.size();
+		for (float t = ts[0]; t <= ts[maxIndex]; t += 0.01f)
 		{
 			vec4 ujPont = r(t);
-			_lineStrip.addPoint(ujPont.v[0], ujPont.v[1]);
+			_lineStrip.addPoint(ujPont.v[0],ujPont.v[1]);
 		}
 	}
 	vec4 r(float t) {
 		//Ezt hívja meg a hermite
 		//Csak akkor lépünk be ha van legalább 2 pont
-
-		//int maxIndex = ts.size();
-		for (int i = 0; i < cps.size() - 1; i++) {
+		int maxIndex = ts.size();
+		for (int i = 0; i < maxIndex; i++) {
 			// Ekkor vagyok 2 kontrollpont között
 			if (ts[i] <= t && t <= ts[i + 1])
 			{
 				return Hermite(cps[i], seb[i], ts[i],
-					cps[i + 1], seb[i + 1], ts[i + 1], t);
+					cps[i + 1], seb[i+1], ts[i + 1], t);
 			}
 		}
 	}
@@ -1060,7 +1026,7 @@ public:
 		mat4 forgat;
 		forgat.forgatZ(rZ);
 		mat4 eltol; // Egysegmatrix
-		eltol.eltolas(cX, cY, 0);
+		eltol.eltolas(cX,cY, 0);
 		mat4 proj;
 		proj.projekcio(sX, sY);
 		//ELTOL * PROJ * FORG
@@ -1075,20 +1041,17 @@ public:
 		glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
 
 		glBindVertexArray(vao);	// make the vao and its vbos active playing the role of the data source
-								//glDrawArrays(GL_LINE_STRIP, 0, 17);	// draw a single triangle with vertices defined in vao
+		//glDrawArrays(GL_LINE_STRIP, 0, 17);	// draw a single triangle with vertices defined in vao
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 17);
 	}
 	void animate(float t)
 	{
 		float biggestTime = catmull.getBiggestTime();
-		float smallestTime = catmull.getSmallestTime();
-		float absTime = biggestTime - smallestTime;
 		t = fmod(t, biggestTime);
-
 		vec4 uj = catmull.r(t);
 		cX = uj.v[0];
 		cY = uj.v[1];
-		rZ = 180 * t;
+		rZ = 180*t;
 		sX = fabs(sinf(t)) + 0.5f;
 		sY = fabs(sinf(t)) + 0.5f;
 	}
