@@ -48,7 +48,6 @@
 #include <GL/freeglut.h>	// must be downloaded unless you have an Apple
 #endif
 
-#include <exception>
 const unsigned int windowWidth = 600, windowHeight = 600;
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +110,7 @@ public:
 	}
 	void push_back(const T& newElem)
 	{
-		if (_size >= _capacity - 1) // Ekkor kell helyfoglalás!!!!
+		if (_size >= _capacity) // Ekkor kell helyfoglalás!!!!
 		{
 			reserve(_capacity + _capacityIncrease); // _capacityIncrease el növeli a méretet
 		}
@@ -127,7 +126,6 @@ public:
 	void clear()
 	{
 		_size = 0;
-
 		delete[] _elements;
 	}
 	void clearCreate()
@@ -136,10 +134,6 @@ public:
 		_elements = new T[_capacity];
 	}
 
-	void push_secret(const T& newElem)
-	{
-		_elements[_size] = newElem;
-	}
 	int size() const
 	{
 		return _size;
@@ -440,12 +434,12 @@ class Shader2
 	const char *fragmentSource = R"(
 	#version 130
     	precision highp float;
-
-									in vec3 color;				// variable input: interpolated color of vertex shader
+	uniform vec3 color;
+									//in vec3 color;				// variable input: interpolated color of vertex shader
 	out vec4 fragmentColor;		// output that goes to the raster memory as told by glBindFragDataLocation
 
 			void main() {
-		fragmentColor = vec4(1,1,0, 1); // extend RGB to RGBA
+		fragmentColor = vec4(color, 1); // extend RGB to RGBA
 	}
 )";
 
@@ -522,7 +516,7 @@ public:
 // handle of the shader program
 
 Shader shaderAlap;
-Shader2 shaderSarga;
+Shader2 shaderSzines;
 
 // 2D camera
 struct Camera {
@@ -576,8 +570,8 @@ public:
 	void Animate(float t) {
 		wCx = 0; //10 * cosf(t);
 		wCy = 0;
-		wWx = 6;
-		wWy =6;
+		wWx = 10;
+		wWy =10;
 	}
 	void follow(float x, float y)
 	{
@@ -628,20 +622,18 @@ class LineStrip {
 	//int    nVertices;       // number of vertices
 	
 	Vector<vec4> vertices; // Csúcsok
+	vec4 color;
 public:
 	LineStrip()
 		:vertices(200)
 	{
 		//nVertices = 0;
 	}
-	void create() {
-		try {
-			glGenVertexArrays(1, &vao);
-		}
-		catch (std::exception e)
-		{
-			printf(e.what());
-		}
+	void create(float r, float g, float b)
+	{
+		setColor(r, g, b);
+		glGenVertexArrays(1, &vao);
+
 		glBindVertexArray(vao);
 
 
@@ -697,17 +689,28 @@ public:
 		vertices.clearCreate();
 	}
 	void draw() {
-		glUseProgram(shaderSarga.shaderProgram);
+		glUseProgram(shaderSzines.shaderProgram);
 		if (vertices.size() > 0) {
-			camera.loadProjViewMatrixes(shaderSarga.shaderProgram);
+			loadColor();
+			camera.loadProjViewMatrixes(shaderSzines.shaderProgram);
 
 			mat4 vegeredmeny;
-			int location = shaderSarga.getUniform("transformation");
+			int location = shaderSzines.getUniform("transformation");
 			glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
 
 			glBindVertexArray(vao);
 			glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
 		}
+	}
+	void setColor(float r, float g, float b)
+	{
+		vec4 newColor(r, g, b);
+		color = newColor;
+	}
+	void loadColor()
+	{
+		int location = shaderSzines.getUniform("color");
+		glUniform3f(location, color.v[0], color.v[1], color.v[2]);
 	}
 };
 
@@ -715,12 +718,15 @@ class Triangle {
 	unsigned int vao[2];	// vertex array object id
 	float sx, sy;		// scaling
 	float wTx, wTy;		// translation
+	vec4 color;
 public:
 	Triangle() {
 		Animate(0);
 	}
 
-	void Create() {
+	void create(float r, float g, float b)
+	{
+		setColor(r, g, b);
 		glGenVertexArrays(2, vao);	// create 1 vertex array object
 		glBindVertexArray(vao[0]);		// make it active
 
@@ -822,6 +828,7 @@ public:
 		
 
 		// set GPU uniform matrix variable MVP with the content of CPU variable MVPTransform
+		loadColor();
 		camera.loadProjViewMatrixes(shaderAlap.shaderProgram);
 		int location = shaderAlap.getUniform("transformation");
 	    glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
@@ -834,13 +841,26 @@ public:
 		//glBindVertexArray(vao[1]);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);	// draw a single triangle with vertices defined in vao
 	}
-		
+	void setColor(float r, float g, float b)
+	{
+		vec4 newColor(r, g, b);
+		color = newColor;
+	}
+	void loadColor()
+	{
+		int location = shaderSzines.getUniform("color");
+		glUniform3f(location, color.v[0], color.v[1], color.v[2]);
+	}
 };
 
 class CatmullRom {
 	Vector<vec4> cps;
 	Vector<float> ts;
 	Vector<vec4> seb;
+	vec4 lastcps;
+	float lastts;
+	vec4 lastseb;
+
 
 	vec4 Hermite(vec4 p0, vec4 v0, float t0,
 		vec4 p1, vec4 v1, float t1,
@@ -859,16 +879,23 @@ class CatmullRom {
 
 		//return eredmeny;
 	}
-	float tenzio = 1.0f; // Egyellore legyen 1
+	float tenzio = -0.8f; // Egyellore legyen 1
 
 	LineStrip _lineStrip;
+	float firstTime;
 public:
 	bool animalhato;
 	vec4 sebesseg;
 	float getBiggestTime()
 	{
 		if (animalhato)
-			return ts[cps.size()];
+			return ts[cps.size()-1];
+		return 0.0f;
+	}
+	float getSmallestTime()
+	{
+		if (animalhato)
+			return ts[0];
 		return 0.0f;
 	}
 	CatmullRom() : sebesseg(0.2f, 0.2f)
@@ -886,8 +913,8 @@ public:
 		cps.push_back(wVertex);
 		ts.push_back(t);
 
-		AddControlPoint(x, y, t);
-		seb.push_back(sebesseg);
+		AddControlPoint(x, y);
+
 		//copyPointsToGPU();
 	}
 	void addClickPoint(float x, float y, float t) {
@@ -897,77 +924,115 @@ public:
 		wVertex = (camera.Vinv()) *camera.Pinv()  * wVertex;
 
 		cps.push_back(wVertex);
-		ts.push_back(t);
+		if (ts.size() == 0)
+		{
+			ts.push_back(0);
+			firstTime = t;
+		}
+		else
+		{
+			ts.push_back(t - firstTime);
+		}
 
-		AddControlPoint(x, y, t);
+		seb.push_back(sebesseg); // Meret novelese
+		AddControlPoint(x, y);
 		//copyPointsToGPU();
 	}
 
 	
-	void AddControlPoint(float x,float y, float t)
+	void AddControlPoint(float x,float y)
 	{
 		//Pont már hozzávan adva!!! Sebesség még nem!!!!
 		
-		
-		//Ha már van 3 pont akkor kiszámolom a sebességeket!
 		if (cps.size() >= 3)
 		{
 			animalhato = true;
-			//Visszacsavarás
 
-			float utolsoSec = ts[ts.size() - 1];
-			cps.push_secret(cps[0]);
-			ts.push_secret(utolsoSec + 0.5f);
-			seb.push_secret(sebesseg);
+			int maxIndex = ts.size() -1;
+			lastcps = cps[0];
+			lastts = ts[maxIndex] + 0.5f;
+			lastseb = ((lastcps - cps[maxIndex]) / (lastts - ts[maxIndex]) + (cps[0] - lastcps) / (ts[0] - lastts)) * ((1.0f - tenzio) / 2.0f);;
 
-			int maxIndex = cps.size();
-
-			vec4 elsoSeb = ((cps[maxIndex] - cps[0])*(1 / (ts[1] - ts[0])) + (cps[1] - cps[maxIndex])*(1 / (ts[0] - ts[maxIndex]))) * 0.9f * tenzio;
+			vec4 elsoSeb = ((cps[0] - lastcps) / (ts[0] - lastts) + (cps[0 + 1] - cps[0]) / (ts[0 + 1] - ts[0])) * ((1.0f - tenzio) / 2.0f);
 			seb[0] = elsoSeb;
 			for (int i = 1; i < maxIndex; i++) // Csak kozepsonek szamol sebességet
 			{
 				vec4 ujseb;
-				ujseb = ((cps[i] - cps[i - 1]) / (ts[i] - ts[i - 1]) + (cps[i + 1] - cps[i]) / (ts[i + 1] - ts[i])) * 0.9f * 0.9f; // Boldi fele
-				//ujseb = ((cps[i+1] - cps[i])*(1/(ts[i+1] - ts[i])) + (cps[i] - cps[i-1])*(1/(ts[i] - ts[i-1]))) * 0.5f * tenzio;
+				ujseb = ((cps[i] - cps[i - 1]) / (ts[i] - ts[i - 1]) + (cps[i + 1] - cps[i]) / (ts[i + 1] - ts[i])) * ((1.0f - tenzio) / 2.0f); // Boldi fele
+																																   //ujseb = ((cps[i+1] - cps[i])*(1/(ts[i+1] - ts[i])) + (cps[i] - cps[i-1])*(1/(ts[i] - ts[i-1]))) * 0.5f * tenzio;
 				seb[i] = ujseb;
 			}
-			vec4 utolsoSeb = ((cps[0] - cps[maxIndex])*(1 / (ts[0] - ts[maxIndex])) + (cps[maxIndex] - cps[maxIndex - 1])*(1 / (ts[maxIndex] - ts[maxIndex-1]))) * 0.9f;
-			//vec4 utolsoSeb = ((cps[0] - cps[cps.size() - 1])*(1 / (ts[0] - ts[cps.size() - 1])) + (cps[cps.size() - 1] - cps[cps.size() - 2])*(1 / (ts[cps.size() - 1] - ts[cps.size() - 2]))) * 0.9f;
+			vec4 utolsoSeb = ((cps[maxIndex] - cps[maxIndex - 1]) / (ts[maxIndex] - ts[maxIndex - 1]) + (lastcps - cps[maxIndex]) / (lastts - ts[maxIndex])) * ((1.0f - tenzio) / 2.0f);
 			seb[maxIndex] = utolsoSeb;
 
 			reCalcSpine();
 		}
+		
 	}
 	void reCalcSpine()
 	{
+		debug_ponints();
 		_lineStrip.clearPoints();
-		int maxIndex = ts.size();
-		for (float t = ts[0]; t <= ts[maxIndex]; t += 0.01f)
+		int maxIndex = ts.size() - 1;
+		for (float t = ts[0]; t < lastts; t += 0.02f)
 		{
 			vec4 ujPont = r(t);
-			_lineStrip.addPoint(ujPont.v[0],ujPont.v[1]);
+			_lineStrip.addPoint(ujPont.v[0], ujPont.v[1]);
 		}
+		vec4 lastPoint = r(lastts);
+		_lineStrip.addPoint(lastPoint.v[0], lastPoint.v[1]);
 	}
 	vec4 r(float t) {
 		//Ezt hívja meg a hermite
 		//Csak akkor lépünk be ha van legalább 2 pont
-		int maxIndex = ts.size();
-		for (int i = 0; i < maxIndex; i++) {
+		
+
+		int maxIndex = ts.size() -1;
+		for (int i = 0; i < cps.size() - 1; i++) {
 			// Ekkor vagyok 2 kontrollpont között
 			if (ts[i] <= t && t <= ts[i + 1])
 			{
 				return Hermite(cps[i], seb[i], ts[i],
-					cps[i + 1], seb[i+1], ts[i + 1], t);
+					cps[i + 1], seb[i + 1], ts[i + 1], t);
 			}
 		}
+		if (ts[maxIndex] <= t && t <= lastts)
+		{
+			return Hermite(cps[maxIndex], seb[maxIndex], ts[maxIndex],
+				lastcps, lastseb, lastts, t);
+		}
 	}
-	void create()
+	void create(float r, float g, float b)
 	{
-		_lineStrip.create();
+		_lineStrip.create(r,g,b);
 	}
 	void draw()
 	{
 		_lineStrip.draw();
+	}
+	void debug_ponints()
+	{
+		printf("Koordinatak:\n");
+		for (int i = 0; i < cps.size(); i++)
+		{
+			printf("%d. X:%f, Y:%f", i, cps[i].v[0], cps[i].v[1]);
+		}
+		printf(" X:%f, Y:%f", lastcps.v[0], lastcps.v[1]);
+		printf("\n--------------------------\n");
+		printf("SEb:\n");
+		for (int i = 0; i < cps.size(); i++)
+		{
+			printf("%d. X:%f, Y:%f", i, seb[i].v[0], seb[i].v[1]);
+		}
+		printf(" X:%f, Y:%f", lastseb.v[0], lastseb.v[1]);
+		printf("\n--------------------------\n");
+		printf("Ido:\n");
+		for (int i = 0; i < cps.size(); i++)
+		{
+			printf("%d)%fs, " , i, ts[i]);
+		}
+		printf("%f", lastts);
+		printf("\n--------------------------\n");
 	}
 };
 
@@ -975,6 +1040,8 @@ CatmullRom catmull;
 
 class Star
 {
+protected:
+	vec4 color;
 public:
 	float cX, cY; //center koordinatak
 	float rZ; //rotateZ
@@ -987,8 +1054,9 @@ public:
 		sX = 1;
 		sY = 1;
 	}
-	void create()
+	void create(float r, float g, float b)
 	{
+		setColor(r, g, b);
 		static float coords[] = {
 			0.0f , 0.0f, -0.14876033057f, -0.479338842975206611570f,
 			0.14876033057, -1.132231404958677f, 0.2396694214876f, -0.4462809917355371f,
@@ -1022,11 +1090,11 @@ public:
 	}
 	void draw()
 	{
-		glUseProgram(shaderSarga.shaderProgram);
+		glUseProgram(shaderSzines.shaderProgram);
 		mat4 forgat;
 		forgat.forgatZ(rZ);
 		mat4 eltol; // Egysegmatrix
-		eltol.eltolas(cX,cY, 0);
+		eltol.eltolas(cX, cY, 0);
 		mat4 proj;
 		proj.projekcio(sX, sY);
 		//ELTOL * PROJ * FORG
@@ -1035,28 +1103,57 @@ public:
 
 
 		// set GPU uniform matrix variable MVP with the content of CPU variable MVPTransform
-
-		camera.loadProjViewMatrixes(shaderSarga.shaderProgram);
-		int location = shaderSarga.getUniform("transformation");
+		loadColor();
+		camera.loadProjViewMatrixes(shaderSzines.shaderProgram);
+		int location = shaderSzines.getUniform("transformation");
 		glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
 
 		glBindVertexArray(vao);	// make the vao and its vbos active playing the role of the data source
-		//glDrawArrays(GL_LINE_STRIP, 0, 17);	// draw a single triangle with vertices defined in vao
+								//glDrawArrays(GL_LINE_STRIP, 0, 17);	// draw a single triangle with vertices defined in vao
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 17);
+	}
+	void setColor(float r, float g, float b)
+	{
+		vec4 newColor(r, g, b);
+		color = newColor;
+	}
+	void loadColor()
+	{
+		int location = shaderSzines.getUniform("color"); 
+		glUniform3f(location,color.v[0], color.v[1], color.v[2]);
 	}
 	void animate(float t)
 	{
+		sX = fabs(sinf(t)) + 0.5f;
+		sY = fabs(sinf(t)) + 0.5f;
+		rZ = 180 * t;
 		float biggestTime = catmull.getBiggestTime();
 		t = fmod(t, biggestTime);
+
 		vec4 uj = catmull.r(t);
 		cX = uj.v[0];
 		cY = uj.v[1];
-		rZ = 180*t;
-		sX = fabs(sinf(t)) + 0.5f;
-		sY = fabs(sinf(t)) + 0.5f;
+		
+		
+	}
+};
+class StarFollower : public Star
+{
+public:
+	StarFollower()
+		:Star()
+	{
+	}
+	void setCenter(float x, float y)
+	{
+		cX = x;
+		cY = y;
 	}
 };
 Star star;
+StarFollower starfollower1;
+StarFollower starfollower2;
+
 // The virtual world: collection of two objects
 Triangle triangle;
 LineStrip linestrip;
@@ -1065,12 +1162,16 @@ void onInitialization() {
 	glViewport(0, 0, windowWidth, windowHeight);
 
 	// Create objects by setting up their vertex data on the GPU
-	shaderSarga.createShader();
+	shaderSzines.createShader();
 	shaderAlap.createShader();
-	catmull.create();
+	catmull.create(0,1,0);
+	starfollower1.create(0.7,0.7,0);
+	starfollower1.setCenter(-1, 1);
+	starfollower2.create(0.5, 0.5, 0);
+
 	//linestrip.create();
-	triangle.Create();
-	star.create();
+	//triangle.Create();
+	star.create(1,1,0);
 	// Create vertex shader from string
 	
 }
@@ -1091,8 +1192,11 @@ void onDisplay() {
 
 	//triangle.Draw();
 	//linestrip.draw();
-	star.draw();
+	
 	catmull.draw();
+	starfollower1.draw();
+	star.draw();
+	
 
 	glutSwapBuffers();									// exchange the two buffers
 	
