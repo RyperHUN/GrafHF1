@@ -215,7 +215,7 @@ public:
 	void forgatZ(float szogFok)
 	{
 		//Valamiért kell egy minusz különben az óramutatóval ellentétesen forgat
-		float radian = - szogFok / 180 * M_PI;
+		float radian = -szogFok / 180 * M_PI;
 		m[0][0] = cosf(radian);
 		m[1][0] = sinf(radian);
 		m[0][1] = -sinf(radian);
@@ -257,10 +257,10 @@ public:
 	{
 		vec4 result;
 		for (int i = 0; i < 4; i++)
-			result.v[i] = v[i]*skalar;
+			result.v[i] = v[i] * skalar;
 		return result;
 	}
-    vec4 operator+(const vec4& right) // compound assignment (does not need to be a member,
+	vec4 operator+(const vec4& right) // compound assignment (does not need to be a member,
 	{                           // but often is, to modify the private members)
 		vec4 result;
 		for (int i = 0; i < 4; i++)
@@ -270,23 +270,23 @@ public:
 	}
 	vec4 operator-(const vec4& right)
 	{
-		return vec4(v[0] - right.v[0],v[1] - right.v[1],v[2] - right.v[2],v[3] - right.v[3]);
+		return vec4(v[0] - right.v[0], v[1] - right.v[1], v[2] - right.v[2], v[3] - right.v[3]);
 	}
 	vec4 operator/(const float& right)
 	{
 		vec4 eredmeny;
-	/*	if (right != 0.0f)
+		/*	if (right != 0.0f)
 		{*/
-			vec4 uj(v[0] / right, v[1] / right, v[2] / right, v[3] / right);
-			eredmeny = uj;
+		vec4 uj(v[0] / right, v[1] / right, v[2] / right, v[3] / right);
+		eredmeny = uj;
 		//}
-		
+
 		return eredmeny;
 	}
 
 	float length()
 	{
-		return sqrtf(v[0]*v[0] + v[1]*v[1]);
+		return sqrtf(v[0] * v[0] + v[1] * v[1]);
 	}
 };
 
@@ -318,11 +318,11 @@ class Shader
 	uniform mat4 view;
 	
 
-							in vec2 vertexPosition;		// variable input from Attrib Array selected by glBindAttribLocation
+									in vec2 vertexPosition;		// variable input from Attrib Array selected by glBindAttribLocation
 	in vec3 vertexColor;	    // variable input from Attrib Array selected by glBindAttribLocation
 	out vec3 color;				// output attribute
 
-							void main() {
+									void main() {
 		color = vertexColor;														// copy color from input to output
 		gl_Position = projection * view * transformation * vec4(vertexPosition.x, vertexPosition.y, 0, 1) ; 		// transform to clipping space
 	}
@@ -333,10 +333,10 @@ class Shader
 	#version 130
     	precision highp float;
 
-							in vec3 color;				// variable input: interpolated color of vertex shader
+									in vec3 color;				// variable input: interpolated color of vertex shader
 	out vec4 fragmentColor;		// output that goes to the raster memory as told by glBindFragDataLocation
 
-							void main() {
+									void main() {
 		fragmentColor = vec4(color, 1); // extend RGB to RGBA
 	}
 )";
@@ -425,7 +425,7 @@ class Shader2
 	
 	in vec2 vertexPosition;		// variable input from Attrib Array selected by glBindAttribLocation
 
-									void main() {
+											void main() {
 		gl_Position = projection * view * transformation * vec4(vertexPosition.x, vertexPosition.y, 0, 1) ; 		// transform to clipping space
 	}
 )";
@@ -438,7 +438,7 @@ class Shader2
 									//in vec3 color;				// variable input: interpolated color of vertex shader
 	out vec4 fragmentColor;		// output that goes to the raster memory as told by glBindFragDataLocation
 
-			void main() {
+					void main() {
 		fragmentColor = vec4(color, 1); // extend RGB to RGBA
 	}
 )";
@@ -530,31 +530,31 @@ public:
 	}
 
 	mat4 V() { // view matrix: translates the center to the origin
-		return mat4(1,    0, 0, -wCx,
-			        0,    1, 0, -wCy,
-			        0,    0, 1, 0,
-			        0, 0, 0, 1  );
+		return mat4(1, 0, 0, -wCx,
+			0, 1, 0, -wCy,
+			0, 0, 1, 0,
+			0, 0, 0, 1);
 	}
 
 	mat4 P() { // projection matrix: scales it to be a square of edge length 2
-		return mat4(2/wWx,    0, 0, 0,
-			        0,    2/wWy, 0, 0,
-			        0,        0, 1, 0,
-			        0,        0, 0, 1);
+		return mat4(2 / wWx, 0, 0, 0,
+			0, 2 / wWy, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1);
 	}
 
 	mat4 Vinv() { // inverse view matrix
-		return mat4(1,     0, 0, wCx,
-				    0,     1, 0, wCy,
-			        0,     0, 1, 0,
-			        0, 0, 0, 1);
+		return mat4(1, 0, 0, wCx,
+			0, 1, 0, wCy,
+			0, 0, 1, 0,
+			0, 0, 0, 1);
 	}
 
 	mat4 Pinv() { // inverse projection matrix
-		return mat4(wWx/2, 0,    0, 0,
-			           0, wWy/2, 0, 0,
-			           0,  0,    1, 0,
-			           0,  0,    0, 1);
+		return mat4(wWx / 2, 0, 0, 0,
+			0, wWy / 2, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1);
 	}
 
 	void setCenter(float x = 0, float y = 0)
@@ -571,7 +571,7 @@ public:
 		wCx = 0; //10 * cosf(t);
 		wCy = 0;
 		wWx = 10;
-		wWy =10;
+		wWy = 10;
 	}
 	void follow(float x, float y)
 	{
@@ -609,18 +609,15 @@ public:
 	}
 };
 
-
-
- //2D camera
-
+//2D camera
 
 Camera camera;
 
 class LineStrip {
-	GLuint vao,vbo;        // vertex array object, vertex buffer object
-	//float  vertexData[100]; // interleaved data of coordinates and colors
-	//int    nVertices;       // number of vertices
-	
+	GLuint vao, vbo;        // vertex array object, vertex buffer object
+							//float  vertexData[100]; // interleaved data of coordinates and colors
+							//int    nVertices;       // number of vertices
+
 	Vector<vec4> vertices; // Csúcsok
 	vec4 color;
 public:
@@ -642,11 +639,11 @@ public:
 		// Enable the vertex attribute arrays
 		glEnableVertexAttribArray(0);  // attribute array 0
 									   // Map attribute array 0 to the vertex data of the interleaved vbo
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), NULL); // attribute array, components/attribute, component type, normalize?, stride, offset
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), NULL); // attribute array, components/attribute, component type, normalize?, stride, offset
 		glBindVertexArray(0);
 	}
 
-	void addClickPoint(float x,float y) {
+	void addClickPoint(float x, float y) {
 
 		vec4 wVertex = vec4(x, y, 0, 1);
 		// EZ A JÓ SORREND !!!!!!!!!!!!!!!!!!!!!!
@@ -662,13 +659,13 @@ public:
 
 		vec4 wVertex = vec4(x, y, 0, 1);
 		vertices.push_back(wVertex);
-		
+
 		copyPointsToGPU();
 	}
 	void copyPointsToGPU()
 	{
 		int nVertices = vertices.size();
-		float* vertexData = new float[nVertices*2];
+		float* vertexData = new float[nVertices * 2];
 
 		for (int i = 0; i < nVertices; i++)
 		{
@@ -733,38 +730,38 @@ public:
 		unsigned int vbo[2];		// vertex buffer objects
 		glGenBuffers(2, &vbo[0]);	// Generate 2 vertex buffer objects
 
-		// vertex coordinates
+									// vertex coordinates
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); // make it active, it is an array
 		static float vertexCoords[] = { -0.5f, -0.5f, 0.0f,
-										0.5f, -0.5f, 0.0f,
-										-0.5f,  0.5f, 0.0f };	// vertex data on the CPU
+			0.5f, -0.5f, 0.0f,
+			-0.5f,  0.5f, 0.0f };	// vertex data on the CPU
 		glBufferData(GL_ARRAY_BUFFER,      // copy to the GPU
-			         sizeof(vertexCoords), // number of the vbo in bytes
-					 vertexCoords,		   // address of the data array on the CPU
-					 GL_STATIC_DRAW);	   // copy to that part of the memory which is not modified 
-		// Map Attribute Array 0 to the current bound vertex buffer (vbo[0])
+			sizeof(vertexCoords), // number of the vbo in bytes
+			vertexCoords,		   // address of the data array on the CPU
+			GL_STATIC_DRAW);	   // copy to that part of the memory which is not modified 
+								   // Map Attribute Array 0 to the current bound vertex buffer (vbo[0])
 
 
-		//createShader(); // ezt eltávolítani innen
-		
-		glEnableVertexAttribArray(0); 
+								   //createShader(); // ezt eltávolítani innen
 
-		
+		glEnableVertexAttribArray(0);
+
+
 		// Data organization of Attribute Array 0 
 		glVertexAttribPointer(0,			// Attribute Array 0
-			                  3, GL_FLOAT,  // components/attribute, component type
-							  GL_FALSE,		// not in fixed point format, do not normalized
-							  3*sizeof(float),
-								NULL);     // stride and offset: it is tightly packed
+			3, GL_FLOAT,  // components/attribute, component type
+			GL_FALSE,		// not in fixed point format, do not normalized
+			3 * sizeof(float),
+			NULL);     // stride and offset: it is tightly packed
 
-		// vertex colors
+					   // vertex colors
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]); // make it active, it is an array
 		static float vertexColors[] = { 1, 0, 0, 1, 0, 0, 1, 0, 0 };	// vertex data on the CPU
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColors), vertexColors, GL_STATIC_DRAW);	// copy to the GPU
 
-		// Map Attribute Array 1 to the current bound vertex buffer (vbo[1])
+																							// Map Attribute Array 1 to the current bound vertex buffer (vbo[1])
 		glEnableVertexAttribArray(1);  // Vertex position
-		// Data organization of Attribute Array 1
+									   // Data organization of Attribute Array 1
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL); // Attribute Array 1, components/attribute, component type, normalize?, tightly packed
 
 		static float vertexColors2[] = { 0,1,0,0,1,0,0,1,0 };
@@ -779,8 +776,8 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, vbo2[0]);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_DYNAMIC_DRAW);
-		
-		
+
+
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo2[1]);
@@ -788,12 +785,12 @@ public:
 		// Csucsok fennvannak
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColors2), vertexColors2, GL_STATIC_DRAW);	// copy to the GPU
 
-																							// Map Attribute Array 1 to the current bound vertex buffer (vbo[1])
-		
-									   // Data organization of Attribute Array 1
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), NULL); // Attribute Array 1, components/attribute, component type, normalize?, tightly packed
+																								// Map Attribute Array 1 to the current bound vertex buffer (vbo[1])
+
+																								// Data organization of Attribute Array 1
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL); // Attribute Array 1, components/attribute, component type, normalize?, tightly packed
 		glEnableVertexAttribArray(1);  // Vertex position
-		
+
 		glBindVertexArray(0);
 	}
 
@@ -812,34 +809,34 @@ public:
 		glUseProgram(shaderAlap.shaderProgram);
 		//mat4 MVPTransform = M * camera.V() * camera.P();
 
-		
+
 		long time = glutGet(GLUT_ELAPSED_TIME); // elapsed time since the start of the program
 		float sec = time / 1000.0f;				// convert msec to sec
 		mat4 forgat;
-		forgat.forgatZ(30 *sec);
+		forgat.forgatZ(30 * sec);
 		mat4 eltol; // Egysegmatrix
 		eltol.eltolas(sin(sec), 0.0f, 0);
-		mat4 proj; 
-		proj.projekcio(1.5,1.5);
+		mat4 proj;
+		proj.projekcio(1.5, 1.5);
 
-		
+
 		mat4 vegeredmeny;
 		vegeredmeny = proj * forgat;
-		
+
 
 		// set GPU uniform matrix variable MVP with the content of CPU variable MVPTransform
 		loadColor();
 		camera.loadProjViewMatrixes(shaderAlap.shaderProgram);
 		int location = shaderAlap.getUniform("transformation");
-	    glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
+		glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
 
 		glBindVertexArray(vao[0]);	// make the vao and its vbos active playing the role of the data source
 		glDrawArrays(GL_TRIANGLES, 0, 3);	// draw a single triangle with vertices defined in vao
-		
-		//location = glGetUniformLocation(shaderProgram, "MVP");
-		//if (location >= 0) glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
-		//glBindVertexArray(vao[1]);
-		//glDrawArrays(GL_TRIANGLES, 0, 3);	// draw a single triangle with vertices defined in vao
+
+											//location = glGetUniformLocation(shaderProgram, "MVP");
+											//if (location >= 0) glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
+											//glBindVertexArray(vao[1]);
+											//glDrawArrays(GL_TRIANGLES, 0, 3);	// draw a single triangle with vertices defined in vao
 	}
 	void setColor(float r, float g, float b)
 	{
@@ -939,16 +936,16 @@ public:
 		//copyPointsToGPU();
 	}
 
-	
-	void AddControlPoint(float x,float y)
+
+	void AddControlPoint(float x, float y)
 	{
 		//Pont már hozzávan adva!!! Sebesség még nem!!!!
-		
+
 		if (cps.size() >= 3)
 		{
 			animalhato = true;
 
-			int maxIndex = ts.size() -1;
+			int maxIndex = ts.size() - 1;
 			lastcps = cps[0];
 			lastts = ts[maxIndex] + 0.5f;
 			//lastseb = ((lastcps - cps[maxIndex]) / (lastts - ts[maxIndex]) + (cps[0] - lastcps) / (ts[0] - lastts)) * ((1.0f - tenzio) / 2.0f);;
@@ -960,7 +957,7 @@ public:
 			{
 				vec4 ujseb;
 				ujseb = ((cps[i] - cps[i - 1]) / (ts[i] - ts[i - 1]) + (cps[i + 1] - cps[i]) / (ts[i + 1] - ts[i])) * ((1.0f - tenzio) / 2.0f); // Boldi fele
-																																   //ujseb = ((cps[i+1] - cps[i])*(1/(ts[i+1] - ts[i])) + (cps[i] - cps[i-1])*(1/(ts[i] - ts[i-1]))) * 0.5f * tenzio;
+																																				//ujseb = ((cps[i+1] - cps[i])*(1/(ts[i+1] - ts[i])) + (cps[i] - cps[i-1])*(1/(ts[i] - ts[i-1]))) * 0.5f * tenzio;
 				seb[i] = ujseb;
 			}
 			vec4 utolsoSeb = ((cps[maxIndex] - cps[maxIndex - 1]) / (ts[maxIndex] - ts[maxIndex - 1]) + (lastcps - cps[maxIndex]) / (lastts - ts[maxIndex])) * ((1.0f - tenzio) / 2.0f);
@@ -968,7 +965,7 @@ public:
 
 			reCalcSpine();
 		}
-		
+
 	}
 	void reCalcSpine()
 	{
@@ -986,9 +983,9 @@ public:
 	vec4 r(float t) {
 		//Ezt hívja meg a hermite
 		//Csak akkor lépünk be ha van legalább 2 pont
-		
 
-		int maxIndex = ts.size() -1;
+
+		int maxIndex = ts.size() - 1;
 		for (int i = 0; i < cps.size() - 1; i++) {
 			// Ekkor vagyok 2 kontrollpont között
 			if (ts[i] <= t && t <= ts[i + 1])
@@ -1005,7 +1002,7 @@ public:
 	}
 	void create(float r, float g, float b)
 	{
-		_lineStrip.create(r,g,b);
+		_lineStrip.create(r, g, b);
 	}
 	void draw()
 	{
@@ -1030,7 +1027,7 @@ public:
 		printf("Ido:\n");
 		for (int i = 0; i < cps.size(); i++)
 		{
-			printf("%d)%fs, " , i, ts[i]);
+			printf("%d)%fs, ", i, ts[i]);
 		}
 		printf("%f", lastts);
 		printf("\n--------------------------\n");
@@ -1043,8 +1040,55 @@ class Star
 {
 protected:
 	vec4 color;
-	int lassitasMerteke = 8;
+	int lassitasMerteke = 4;
+	bool isVorosEltolodas;
 public:
+	vec4 center;
+	void vorosEltolodas()
+	{
+		isVorosEltolodas = true;
+		float tavolsag = center.length();
+		float maxTavolsag = sqrt(camera.wWx*camera.wWx + camera.wWy*camera.wWy);
+		// Fuggveny ami a tavolsagot 2 reszre osztja, egyik reszeben csak a pirosat csükkenti, a másik részbe meg elkezdi növelni a kéket,
+		// Így igazából nem működne de amikor majdnem a határnál vagyunk, akkor 2 részre kell osztanunk.
+		float maxTavolsagFele = maxTavolsag / 2;
+		float kekArany = 0.2f;
+		if (maxTavolsagFele > tavolsag)
+		{
+			float normalizaltTav = tavolsag / maxTavolsagFele; // 0-1 közötti szam
+			float ujSzin = 1 - normalizaltTav; // Így ha közel van a feléhez, akkor semennyire nem piros, egyebkent meg ha tavol vagyunk akkor egyre pirosabb
+
+
+
+			if (ujSzin < 0.5f)
+			{
+				setColor(ujSzin, 0, kekArany*normalizaltTav); // Így elkezd kékülni ha 0.5 alatt van a piros intenzitása
+			}
+			else
+			{
+				setColor(ujSzin, 0, 0);
+			}
+		}
+		else
+		{
+			float normalizaltTav = (tavolsag - maxTavolsagFele) / maxTavolsagFele; // 0-1 közötti szam
+
+
+			if (normalizaltTav < 0.5f)
+			{
+				setColor(0, 0, kekArany + normalizaltTav); // Így elkezd kékülni ha 0.4 alatt van a piros intenzitása
+			}
+			else
+			{
+				normalizaltTav = kekArany + normalizaltTav;
+				if (normalizaltTav >= 1.0f)
+					normalizaltTav = 1.0f;
+				setColor(0, 0, normalizaltTav);
+			}
+		}
+	}
+
+
 	float cX, cY; //center koordinatak
 	float rZ; //rotateZ
 	float sX, sY;
@@ -1055,6 +1099,7 @@ public:
 		cY = 0;
 		sX = 1;
 		sY = 1;
+		isVorosEltolodas = false;
 	}
 	void create(float r, float g, float b)
 	{
@@ -1121,8 +1166,8 @@ public:
 	}
 	void loadColor()
 	{
-		int location = shaderSzines.getUniform("color"); 
-		glUniform3f(location,color.v[0], color.v[1], color.v[2]);
+		int location = shaderSzines.getUniform("color");
+		glUniform3f(location, color.v[0], color.v[1], color.v[2]);
 	}
 	void animate(float t)
 	{
@@ -1130,13 +1175,14 @@ public:
 		sY = fabs(sinf(t)) + 0.5f;
 		rZ = 180 * t;
 		float biggestTime = catmull.getBiggestTime();
-		t = fmod(t/lassitasMerteke, biggestTime);
+		t = fmod(t / lassitasMerteke, biggestTime);
 
 		vec4 uj = catmull.r(t);
+		center = uj;
 		cX = uj.v[0];
 		cY = uj.v[1];
-		
-		
+
+
 	}
 };
 Star star;
@@ -1148,14 +1194,14 @@ class StarFollower : public Star
 	float referenceTime; // alapból 0,  ezt kivonva t ből kapunk dt-t
 	const float g = 2.0f;
 	const float m1 = 1;
-	const float m2 = 1;
-	const float surlodas = 0.3f;
+	const float m2 = 5;
+	const float surlodas = 0.4f;
 public:
 	void ujseb(float t)
 	{
-		t = t / (lassitasMerteke/2);
+		t = t / (lassitasMerteke / 2);
 		vec4 tavolsag = getTavolsag(star); // r2 - r1  = r1 ből r2 be mutató vektor
-		gyorsulas = tavolsag * g*(m1*m2)/powf(tavolsag.length(),3) - seb*surlodas;
+		gyorsulas = tavolsag * g*(m1*m2) / powf(tavolsag.length(), 3) - seb*surlodas;
 
 		float dt = t - referenceTime;
 		seb = seb + gyorsulas*dt; // Gyorsulast meg ki kene szamolni
@@ -1199,17 +1245,17 @@ void onInitialization() {
 	// Create objects by setting up their vertex data on the GPU
 	shaderSzines.createShader();
 	shaderAlap.createShader();
-	catmull.create(0,1,0);
-	starfollower1.create(0.7,0.7,0);
+	catmull.create(0, 1, 0);
+	starfollower1.create(0.7, 0.7, 0);
 	starfollower1.setCenter(-2.0f, 2.0f);
 	starfollower2.create(0.5, 0.6, 0.2);
 	starfollower2.setCenter(+3.0f, +3.0f);
 
 	//linestrip.create();
 	//triangle.Create();
-	star.create(1,1,0);
+	star.create(1, 1, 0);
 	// Create vertex shader from string
-	
+
 }
 
 
@@ -1226,17 +1272,17 @@ void onDisplay() {
 	glClearColor(0, 0, 0, 0);							// background color 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the screen
 
-	//triangle.Draw();
-	//linestrip.draw();
-	
+														//triangle.Draw();
+														//linestrip.draw();
+
 	catmull.draw();
 	starfollower1.draw();
 	starfollower2.draw();
 	star.draw();
-	
+
 
 	glutSwapBuffers();									// exchange the two buffers
-	
+
 
 	if (camera.isFollowing)
 		camera.setCenter(star.cX, star.cY);
@@ -1246,7 +1292,7 @@ void onDisplay() {
 const float cameraSpeed = 0.3f;
 // Key  ASCII code pressed
 void onKeyboard(unsigned char key, int pX, int pY) {
-	
+
 	if (key == 'd')
 		camera.wCx += cameraSpeed;
 	else if (key == 'a')
@@ -1275,7 +1321,7 @@ void onMouse(int button, int state, int pX, int pY) {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {  // GLUT_LEFT_BUTTON / GLUT_RIGHT_BUTTON and GLUT_DOWN / GLUT_UP
 		float cX = (2.0f * pX / windowWidth) - 1;	// flip y axis
 		float cY = 1.0f - (2.0f * pY / windowHeight);
-		
+
 		long time = glutGet(GLUT_ELAPSED_TIME); // elapsed time since the start of the program
 		float sec = time / 1000.0f;
 		//linestrip.addClickPoint(cX, cY);
@@ -1291,9 +1337,13 @@ void onMouseMotion(int pX, int pY) {
 // Idle event indicating that some time elapsed: do animation here
 void onIdle() {
 	long time = glutGet(GLUT_ELAPSED_TIME); // elapsed time since the start of the program
-	float sec = time / 1000.0f;				
-	if(catmull.animalhato)
+	float sec = time / 1000.0f;
+	if (catmull.animalhato)
+	{
+		star.vorosEltolodas();
 		star.animate(sec);
+	}
+
 	///Gravitacio teszt
 	starfollower1.ujseb(sec);
 	starfollower2.ujseb(sec);
