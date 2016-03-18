@@ -951,9 +951,10 @@ public:
 			int maxIndex = ts.size() -1;
 			lastcps = cps[0];
 			lastts = ts[maxIndex] + 0.5f;
-			lastseb = ((lastcps - cps[maxIndex]) / (lastts - ts[maxIndex]) + (cps[0] - lastcps) / (ts[0] - lastts)) * ((1.0f - tenzio) / 2.0f);;
+			//lastseb = ((lastcps - cps[maxIndex]) / (lastts - ts[maxIndex]) + (cps[0] - lastcps) / (ts[0] - lastts)) * ((1.0f - tenzio) / 2.0f);;
 
 			vec4 elsoSeb = ((cps[0] - lastcps) / (ts[0] - lastts) + (cps[0 + 1] - cps[0]) / (ts[0 + 1] - ts[0])) * ((1.0f - tenzio) / 2.0f);
+			lastseb = elsoSeb;
 			seb[0] = elsoSeb;
 			for (int i = 1; i < maxIndex; i++) // Csak kozepsonek szamol sebességet
 			{
