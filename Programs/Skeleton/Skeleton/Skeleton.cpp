@@ -1138,20 +1138,53 @@ public:
 		
 	}
 };
+Star star;
 class StarFollower : public Star
 {
+	vec4 r;
+	vec4 seb;
+	vec4 gyorsulas;
+	float referenceTime; // alapból 0,  ezt kivonva t ből kapunk dt-t
+	const float g = 2.0f;
+	const float m1 = 1;
+	const float m2 = 1;
+	const float surlodas = 0.3f;
 public:
+	void ujseb(float t)
+	{
+		t = t / (lassitasMerteke/2);
+		vec4 tavolsag = getTavolsag(star); // r2 - r1  = r1 ből r2 be mutató vektor
+		gyorsulas = tavolsag * g*(m1*m2)/powf(tavolsag.length(),3) - seb*surlodas;
+
+		float dt = t - referenceTime;
+		seb = seb + gyorsulas*dt; // Gyorsulast meg ki kene szamolni
+
+		r = r + seb * dt;
+		setCenter(r.v[0], r.v[1]);
+
+		referenceTime = t;
+	}
 	StarFollower()
 		:Star()
 	{
+		referenceTime = 0;
+	}
+	vec4 getTavolsag(Star star)
+	{
+		float x = star.cX;
+		float y = star.cY;
+		vec4 ujVektor(x - cX, y - cY);
+		return ujVektor;
 	}
 	void setCenter(float x, float y)
 	{
 		cX = x;
 		cY = y;
+		vec4 hely(x, y);
+		r = hely;
 	}
 };
-Star star;
+
 StarFollower starfollower1;
 StarFollower starfollower2;
 
@@ -1260,6 +1293,9 @@ void onIdle() {
 	float sec = time / 1000.0f;				
 	if(catmull.animalhato)
 		star.animate(sec);
+	///Gravitacio teszt
+	starfollower1.ujseb(sec);
+	starfollower2.ujseb(sec);
 	glutPostRedisplay();					// redraw the scene
 }
 
