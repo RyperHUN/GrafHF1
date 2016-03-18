@@ -889,7 +889,7 @@ public:
 	float getBiggestTime()
 	{
 		if (animalhato)
-			return ts[cps.size()-1];
+			return lastts;
 		return 0.0f;
 	}
 	float getSmallestTime()
@@ -1128,7 +1128,7 @@ public:
 		sY = fabs(sinf(t)) + 0.5f;
 		rZ = 180 * t;
 		float biggestTime = catmull.getBiggestTime();
-		t = fmod(t, biggestTime);
+		t = fmod(t/10, biggestTime);
 
 		vec4 uj = catmull.r(t);
 		cX = uj.v[0];
