@@ -1042,6 +1042,7 @@ class Star
 {
 protected:
 	vec4 color;
+	int lassitasMerteke = 8;
 public:
 	float cX, cY; //center koordinatak
 	float rZ; //rotateZ
@@ -1128,7 +1129,7 @@ public:
 		sY = fabs(sinf(t)) + 0.5f;
 		rZ = 180 * t;
 		float biggestTime = catmull.getBiggestTime();
-		t = fmod(t/10, biggestTime);
+		t = fmod(t/lassitasMerteke, biggestTime);
 
 		vec4 uj = catmull.r(t);
 		cX = uj.v[0];
@@ -1166,8 +1167,9 @@ void onInitialization() {
 	shaderAlap.createShader();
 	catmull.create(0,1,0);
 	starfollower1.create(0.7,0.7,0);
-	starfollower1.setCenter(-1, 1);
-	starfollower2.create(0.5, 0.5, 0);
+	starfollower1.setCenter(-2.0f, 2.0f);
+	starfollower2.create(0.5, 0.6, 0.2);
+	starfollower2.setCenter(+3.0f, +3.0f);
 
 	//linestrip.create();
 	//triangle.Create();
@@ -1195,6 +1197,7 @@ void onDisplay() {
 	
 	catmull.draw();
 	starfollower1.draw();
+	starfollower2.draw();
 	star.draw();
 	
 
