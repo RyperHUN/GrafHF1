@@ -464,8 +464,8 @@ public:
 	void Animate(float t) {
 		wCx = 0; //10 * cosf(t);
 		wCy = 0;
-		wWx = 10;
-		wWy = 10;
+		wWx = 16;
+		wWy = 16;
 	}
 	void follow(float x, float y)
 	{
@@ -726,10 +726,9 @@ public:
 	}
 	void reCalcSpine()
 	{
-		debug_ponints();
 		_lineStrip.clearPoints();
 		int maxIndex = ts.size() - 1;
-		for (float t = ts[0]; t < lastts; t += 0.02f)
+		for (float t = ts[0]; t < lastts; t += 0.01f)
 		{
 			vec4 ujPont = r(t);
 			_lineStrip.addPoint(ujPont.v[0], ujPont.v[1]);
@@ -764,30 +763,6 @@ public:
 	void draw()
 	{
 		_lineStrip.draw();
-	}
-	void debug_ponints()
-	{
-		printf("Koordinatak:\n");
-		for (int i = 0; i < cps.size(); i++)
-		{
-			printf("%d. X:%f, Y:%f", i, cps[i].v[0], cps[i].v[1]);
-		}
-		printf(" X:%f, Y:%f", lastcps.v[0], lastcps.v[1]);
-		printf("\n--------------------------\n");
-		printf("SEb:\n");
-		for (int i = 0; i < cps.size(); i++)
-		{
-			printf("%d. X:%f, Y:%f", i, seb[i].v[0], seb[i].v[1]);
-		}
-		printf(" X:%f, Y:%f", lastseb.v[0], lastseb.v[1]);
-		printf("\n--------------------------\n");
-		printf("Ido:\n");
-		for (int i = 0; i < cps.size(); i++)
-		{
-			printf("%d)%fs, ", i, ts[i]);
-		}
-		printf("%f", lastts);
-		printf("\n--------------------------\n");
 	}
 };
 
@@ -953,7 +928,7 @@ class StarFollower : public Star
 	const float m1 = 1;
 	const float m2 = 5;
 	const float surlodas = 0.4f;
-	const float MAXERTEK = 120;
+	const float MAXERTEK = 110;
 public:
 	void ujseb(float t)
 	{
@@ -961,7 +936,7 @@ public:
 		vec4 tavolsag = getTavolsag(star); // r2 - r1  = r1 ből r2 be mutató vektor
 		gyorsulas = tavolsag * g*(m1*m2) / powf(tavolsag.length(), 3) - seb*surlodas;
 		
-		gyorsulas = maximalizal(gyorsulas, MAXERTEK);
+		gyorsulas = maximalizal(gyorsulas, MAXERTEK+70);
 
 
 		float dt = t - referenceTime;
@@ -1066,7 +1041,7 @@ void onDisplay() {
 }
 
 
-const float cameraSpeed = 0.3f;
+const float cameraSpeed = 0.5f;
 // Key  ASCII code pressed
 // WASD- Kamera mozgatasa
 // RF - Kamera zoom
