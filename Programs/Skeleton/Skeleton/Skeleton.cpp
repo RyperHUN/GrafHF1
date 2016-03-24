@@ -284,7 +284,7 @@ public:
 		return eredmeny;
 	}
 
-	float length()
+	float length() const
 	{
 		return sqrtf(v[0] * v[0] + v[1] * v[1]);
 	}
@@ -507,6 +507,7 @@ public:
 
 Camera camera;
 
+// 'Vegtelen' pontot tud tárolni 
 class LineStrip {
 	GLuint vao, vbo;        // vertex array object, vertex buffer object
 							//float  vertexData[100]; // interleaved data of coordinates and colors
@@ -609,10 +610,10 @@ class CatmullRom {
 	
 	Vector<float> ts;
 	Vector<vec4> seb;
+
 	vec4 lastcps;
 	float lastts;
 	vec4 lastseb;
-
 
 	vec4 Hermite(vec4 p0, vec4 v0, float t0,
 		vec4 p1, vec4 v1, float t1,
@@ -952,15 +953,21 @@ class StarFollower : public Star
 	const float m1 = 1;
 	const float m2 = 5;
 	const float surlodas = 0.4f;
+	const float MAXERTEK = 120;
 public:
 	void ujseb(float t)
 	{
 		t = t / (lassitasMerteke / 2);
 		vec4 tavolsag = getTavolsag(star); // r2 - r1  = r1 ből r2 be mutató vektor
 		gyorsulas = tavolsag * g*(m1*m2) / powf(tavolsag.length(), 3) - seb*surlodas;
+		
+		gyorsulas = maximalizal(gyorsulas, MAXERTEK);
+
 
 		float dt = t - referenceTime;
 		seb = seb + gyorsulas*dt; // Gyorsulast meg ki kene szamolni
+
+		seb = maximalizal(seb, MAXERTEK);
 
 		r = r + seb * dt;
 		setCenter(r.v[0], r.v[1]);
@@ -985,6 +992,27 @@ public:
 		cY = y;
 		vec4 hely(x, y);
 		r = hely;
+	}
+	vec4 maximalizal(vec4 const& sebesseg,float const& MAXERTEK)
+	{
+		if (sebesseg.length() > MAXERTEK)
+		{
+			vec4 ujSebesseg = sebesseg;
+			float x = ujSebesseg.v[0];
+			float y = ujSebesseg.v[1];
+			float absSeb = ujSebesseg.length();
+			x = x*x;
+			y = y*y;
+			absSeb = absSeb*absSeb;
+			float xPercent = x / absSeb;
+			float yPercent = y / absSeb;
+
+			ujSebesseg.v[0] = xPercent * MAXERTEK;
+			ujSebesseg.v[1] = yPercent * MAXERTEK;
+
+			return ujSebesseg;
+		}
+		return sebesseg;
 	}
 };
 
@@ -1059,8 +1087,6 @@ void onKeyboard(unsigned char key, int pX, int pY) {
 		camera.increaseScale(-0.1f, -0.1f);
 	else if (key == ' ')
 		camera.toggleFollow();
-	//else if (key == 'c')
-	//	linestrip.clearPoints();  // Törli a linestrip ből a pontokat
 }
 
 // Key of ASCII code released
