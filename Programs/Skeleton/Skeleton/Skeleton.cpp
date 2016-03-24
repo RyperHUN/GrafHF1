@@ -1094,7 +1094,7 @@ void onIdle() {
 	float sec = time / 1000.0f;
 	if (catmull.animalhato)
 	{
-		star.vorosEltolodas();
+		//star.vorosEltolodas();
 		star.animate(sec);
 	}
 
