@@ -993,24 +993,21 @@ public:
 // The virtual world: collection of two objects
 StarFollower starfollower1;
 StarFollower starfollower2;
-LineStrip linestrip;
 // Initialization, create an OpenGL context
 void onInitialization() {
 	glViewport(0, 0, windowWidth, windowHeight);
 
 	// Create objects by setting up their vertex data on the GPU
 	shaderSzines.createShader();
+
 	catmull.create(0, 1, 0);
+
 	starfollower1.create(0.7, 0.7, 0);
 	starfollower1.setCenter(-2.0f, 2.0f);
 	starfollower2.create(0.5, 0.6, 0.2);
 	starfollower2.setCenter(+3.0f, +3.0f);
 
-	//linestrip.create();
-	//triangle.Create();
 	star.create(1, 1, 0);
-	// Create vertex shader from string
-
 }
 
 
@@ -1038,13 +1035,14 @@ void onDisplay() {
 
 	glutSwapBuffers();									// exchange the two buffers
 
-
-
 }
 
 
 const float cameraSpeed = 0.3f;
 // Key  ASCII code pressed
+// WASD- Kamera mozgatasa
+// RF - Kamera zoom
+// Space - Csillag focus ON/OFF
 void onKeyboard(unsigned char key, int pX, int pY) {
 
 	if (key == 'd')
@@ -1061,8 +1059,8 @@ void onKeyboard(unsigned char key, int pX, int pY) {
 		camera.increaseScale(-0.1f, -0.1f);
 	else if (key == ' ')
 		camera.toggleFollow();
-	else if (key == 'c')
-		linestrip.clearPoints();  // Törli a linestrip ből a pontokat
+	//else if (key == 'c')
+	//	linestrip.clearPoints();  // Törli a linestrip ből a pontokat
 }
 
 // Key of ASCII code released
@@ -1075,10 +1073,10 @@ void onMouse(int button, int state, int pX, int pY) {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {  // GLUT_LEFT_BUTTON / GLUT_RIGHT_BUTTON and GLUT_DOWN / GLUT_UP
 		float cX = (2.0f * pX / windowWidth) - 1;	// flip y axis
 		float cY = 1.0f - (2.0f * pY / windowHeight);
-
+		
 		long time = glutGet(GLUT_ELAPSED_TIME); // elapsed time since the start of the program
 		float sec = time / 1000.0f;
-		//linestrip.addClickPoint(cX, cY);
+
 		catmull.addClickPoint(cX, cY, sec);
 		glutPostRedisplay();     // redraw
 	}
