@@ -18,8 +18,8 @@
 //
 // NYILATKOZAT
 // ---------------------------------------------------------------------------------------------
-// Nev    : 
-// Neptun : 
+// Nev    : Kormány Zsolt
+// Neptun : IHTUO1
 // ---------------------------------------------------------------------------------------------
 // ezennel kijelentem, hogy a feladatot magam keszitettem, es ha barmilyen segitseget igenybe vettem vagy
 // mas szellemi termeket felhasznaltam, akkor a forrast es az atvett reszt kommentekben egyertelmuen jeloltem.
@@ -57,6 +57,7 @@ const unsigned int windowWidth = 600, windowHeight = 600;
 // OpenGL major and minor versions
 int majorVersion = 3, minorVersion = 0;
 
+//Saját vektor osztály, végleges skeleton kiadás előtt készült!
 template <typename T>
 class Vector
 {
@@ -235,7 +236,6 @@ public:
 };
 
 
-///VEKTOR FÜGGVÉNYEK NEM BIZTOS HOGY MŰKÖDNEK + és * skalárral
 // 3D point in homogeneous coordinates
 class vec4 {
 public:
@@ -295,7 +295,8 @@ vec4 operator*(float &szam, vec4& right)
 	return right* szam;
 }
 
-vec4 mat4::operator*(const vec4& right) // Jobbrol szorzas vektorral // Vektor jobbrol matrix
+// Jobbrol szorzas vektorral // Vektor jobbrol matrix
+vec4 mat4::operator*(const vec4& right)
 {
 	vec4 result;
 	for (int i = 0; i < 4; i++) {
@@ -307,112 +308,6 @@ vec4 mat4::operator*(const vec4& right) // Jobbrol szorzas vektorral // Vektor j
 	}
 	return result;
 }
-
-class Shader
-{
-	const char *vertexSource = R"(
-	#version 130
-    	precision highp float;
-	uniform mat4 transformation;	 
-	uniform mat4 projection;
-	uniform mat4 view;
-	
-
-									in vec2 vertexPosition;		// variable input from Attrib Array selected by glBindAttribLocation
-	in vec3 vertexColor;	    // variable input from Attrib Array selected by glBindAttribLocation
-	out vec3 color;				// output attribute
-
-									void main() {
-		color = vertexColor;														// copy color from input to output
-		gl_Position = projection * view * transformation * vec4(vertexPosition.x, vertexPosition.y, 0, 1) ; 		// transform to clipping space
-	}
-)";
-
-	// fragment shader in GLSL
-	const char *fragmentSource = R"(
-	#version 130
-    	precision highp float;
-
-									in vec3 color;				// variable input: interpolated color of vertex shader
-	out vec4 fragmentColor;		// output that goes to the raster memory as told by glBindFragDataLocation
-
-									void main() {
-		fragmentColor = vec4(color, 1); // extend RGB to RGBA
-	}
-)";
-
-public:
-
-	//unsigned int programID;
-	unsigned int shaderProgram;
-	//unsigned int vertexShaderID;  // Esetleg ezeket is eltárolni
-	//unsigned int fragmentShaderID;
-	// vertex shader in GLSL
-	Shader()
-	{
-	}
-
-	void createShader()
-	{
-		unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		if (!vertexShader) {
-			printf("Error in vertex shader creation\n");
-			exit(1);
-		}
-		glShaderSource(vertexShader, 1, &vertexSource, NULL);
-		glCompileShader(vertexShader);
-		checkShader(vertexShader, "Vertex shader error");
-
-		// Create fragment shader from string
-		unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-		if (!fragmentShader) {
-			printf("Error in fragment shader creation\n");
-			exit(1);
-		}
-		glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-		glCompileShader(fragmentShader);
-		checkShader(fragmentShader, "Fragment shader error");
-
-		// Attach shaders to a single program
-		shaderProgram = glCreateProgram();
-		if (!shaderProgram) {
-			printf("Error in shader program creation\n");
-			exit(1);
-		}
-		glAttachShader(shaderProgram, vertexShader);
-		glAttachShader(shaderProgram, fragmentShader);
-
-		bindAttributes();
-
-		// program packaging
-		glLinkProgram(shaderProgram);
-		checkLinking(shaderProgram);
-		// make this program run
-		glUseProgram(shaderProgram);
-
-		//Toroljuk a shadereket - Mar hozzaadtuk a programhoz szoval mar nem kell
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
-	}
-	void bindAttributes()
-	{
-		// Connect Attrib Arrays to input variables of the vertex shader
-		glBindAttribLocation(shaderProgram, 0, "vertexPosition"); // vertexPosition gets values from Attrib Array 0
-		glBindAttribLocation(shaderProgram, 1, "vertexColor");    // vertexColor gets values from Attrib Array 1
-																  // Connect the fragmentColor to the frame buffer memory
-		glBindFragDataLocation(shaderProgram, 0, "fragmentColor");	// fragmentColor goes to the frame buffer memory
-	}
-	int getUniform(const char* uniformName)
-	{
-		int location = glGetUniformLocation(shaderProgram, uniformName);
-		if (location < 0)
-		{
-			printf("uniform %s cannot be set\n", uniformName);
-			throw "hibas lekeres"; // Ezt esetleg kivenni
-		}
-		return location;
-	}
-};
 
 class Shader2
 {
@@ -515,14 +410,13 @@ public:
 };
 // handle of the shader program
 
-Shader shaderAlap;
 Shader2 shaderSzines;
 
 // 2D camera
 struct Camera {
 	float wCx, wCy;	// center in world coordinates
 	float wWx, wWy;	// width and height in world coordinates
-	boolean isFollowing;
+	bool isFollowing;
 public:
 	Camera() {
 		Animate(0);
@@ -711,147 +605,8 @@ public:
 	}
 };
 
-class Triangle {
-	unsigned int vao[2];	// vertex array object id
-	float sx, sy;		// scaling
-	float wTx, wTy;		// translation
-	vec4 color;
-public:
-	Triangle() {
-		Animate(0);
-	}
-
-	void create(float r, float g, float b)
-	{
-		setColor(r, g, b);
-		glGenVertexArrays(2, vao);	// create 1 vertex array object
-		glBindVertexArray(vao[0]);		// make it active
-
-		unsigned int vbo[2];		// vertex buffer objects
-		glGenBuffers(2, &vbo[0]);	// Generate 2 vertex buffer objects
-
-									// vertex coordinates
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]); // make it active, it is an array
-		static float vertexCoords[] = { -0.5f, -0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f };	// vertex data on the CPU
-		glBufferData(GL_ARRAY_BUFFER,      // copy to the GPU
-			sizeof(vertexCoords), // number of the vbo in bytes
-			vertexCoords,		   // address of the data array on the CPU
-			GL_STATIC_DRAW);	   // copy to that part of the memory which is not modified 
-								   // Map Attribute Array 0 to the current bound vertex buffer (vbo[0])
-
-
-								   //createShader(); // ezt eltávolítani innen
-
-		glEnableVertexAttribArray(0);
-
-
-		// Data organization of Attribute Array 0 
-		glVertexAttribPointer(0,			// Attribute Array 0
-			3, GL_FLOAT,  // components/attribute, component type
-			GL_FALSE,		// not in fixed point format, do not normalized
-			3 * sizeof(float),
-			NULL);     // stride and offset: it is tightly packed
-
-					   // vertex colors
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]); // make it active, it is an array
-		static float vertexColors[] = { 1, 0, 0, 1, 0, 0, 1, 0, 0 };	// vertex data on the CPU
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColors), vertexColors, GL_STATIC_DRAW);	// copy to the GPU
-
-																							// Map Attribute Array 1 to the current bound vertex buffer (vbo[1])
-		glEnableVertexAttribArray(1);  // Vertex position
-									   // Data organization of Attribute Array 1
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL); // Attribute Array 1, components/attribute, component type, normalize?, tightly packed
-
-		static float vertexColors2[] = { 0,1,0,0,1,0,0,1,0 };
-		static float coords[] = { 0.5f, -0.5f, 0.0f,
-			-0.5f, 0.5f, 0.0f,
-			0.5f, 0.5f, 0.0f };
-		/* Masik haromszog*/
-		glBindVertexArray(vao[1]);
-
-		unsigned int vbo2[2];
-		glGenBuffers(2, vbo2);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo2[0]);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_DYNAMIC_DRAW);
-
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo2[1]);
-		glEnableVertexAttribArray(0);
-		// Csucsok fennvannak
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColors2), vertexColors2, GL_STATIC_DRAW);	// copy to the GPU
-
-																								// Map Attribute Array 1 to the current bound vertex buffer (vbo[1])
-
-																								// Data organization of Attribute Array 1
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL); // Attribute Array 1, components/attribute, component type, normalize?, tightly packed
-		glEnableVertexAttribArray(1);  // Vertex position
-
-		glBindVertexArray(0);
-	}
-
-	void Animate(float t) {
-		sx = 0.5f; // *sinf(t);
-		sy = 0.5f; // *cosf(t);
-		wTx = 0; // 4 * cosf(t / 2);
-		wTy = 0; // 4 * sinf(t / 2);
-	}
-
-	void Draw() {
-		//mat4 M(sx,   0,  0, 0,
-		//	    0,  sy,  0, 0,
-		//	    0,   0,  0, 0,
-		//	  wTx, wTy,  0, 1); // model matrix
-		glUseProgram(shaderAlap.shaderProgram);
-		//mat4 MVPTransform = M * camera.V() * camera.P();
-
-
-		long time = glutGet(GLUT_ELAPSED_TIME); // elapsed time since the start of the program
-		float sec = time / 1000.0f;				// convert msec to sec
-		mat4 forgat;
-		forgat.forgatZ(30 * sec);
-		mat4 eltol; // Egysegmatrix
-		eltol.eltolas(sin(sec), 0.0f, 0);
-		mat4 proj;
-		proj.projekcio(1.5, 1.5);
-
-
-		mat4 vegeredmeny;
-		vegeredmeny = proj * forgat;
-
-
-		// set GPU uniform matrix variable MVP with the content of CPU variable MVPTransform
-		loadColor();
-		camera.loadProjViewMatrixes(shaderAlap.shaderProgram);
-		int location = shaderAlap.getUniform("transformation");
-		glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
-
-		glBindVertexArray(vao[0]);	// make the vao and its vbos active playing the role of the data source
-		glDrawArrays(GL_TRIANGLES, 0, 3);	// draw a single triangle with vertices defined in vao
-
-											//location = glGetUniformLocation(shaderProgram, "MVP");
-											//if (location >= 0) glUniformMatrix4fv(location, 1, GL_TRUE, vegeredmeny); // set uniform variable MVP to the MVPTransform
-											//glBindVertexArray(vao[1]);
-											//glDrawArrays(GL_TRIANGLES, 0, 3);	// draw a single triangle with vertices defined in vao
-	}
-	void setColor(float r, float g, float b)
-	{
-		vec4 newColor(r, g, b);
-		color = newColor;
-	}
-	void loadColor()
-	{
-		int location = shaderSzines.getUniform("color");
-		glUniform3f(location, color.v[0], color.v[1], color.v[2]);
-	}
-};
-
 class CatmullRom {
-	Vector<vec4> cps;
+	
 	Vector<float> ts;
 	Vector<vec4> seb;
 	vec4 lastcps;
@@ -881,6 +636,7 @@ class CatmullRom {
 	LineStrip _lineStrip;
 	float firstTime;
 public:
+	Vector<vec4> cps;
 	bool animalhato;
 	vec4 sebesseg;
 	float getBiggestTime()
@@ -1048,7 +804,7 @@ public:
 	{
 		isVorosEltolodas = true;
 		float tavolsag = center.length();
-		float maxTavolsag = sqrt(camera.wWx*camera.wWx + camera.wWy*camera.wWy);
+		float maxTavolsag = sqrtf(camera.wWx*camera.wWx + camera.wWy*camera.wWy);
 		// Fuggveny ami a tavolsagot 2 reszre osztja, egyik reszeben csak a pirosat csükkenti, a másik részbe meg elkezdi növelni a kéket,
 		// Így igazából nem működne de amikor majdnem a határnál vagyunk, akkor 2 részre kell osztanunk.
 		float maxTavolsagFele = maxTavolsag / 2;
@@ -1232,11 +988,11 @@ public:
 	}
 };
 
-StarFollower starfollower1;
-StarFollower starfollower2;
+
 
 // The virtual world: collection of two objects
-Triangle triangle;
+StarFollower starfollower1;
+StarFollower starfollower2;
 LineStrip linestrip;
 // Initialization, create an OpenGL context
 void onInitialization() {
@@ -1244,7 +1000,6 @@ void onInitialization() {
 
 	// Create objects by setting up their vertex data on the GPU
 	shaderSzines.createShader();
-	shaderAlap.createShader();
 	catmull.create(0, 1, 0);
 	starfollower1.create(0.7, 0.7, 0);
 	starfollower1.setCenter(-2.0f, 2.0f);
@@ -1263,7 +1018,7 @@ void onInitialization() {
 
 //=============================== ====================================EVENTS===================================================================================/
 void onExit() {
-	glDeleteProgram(shaderAlap.shaderProgram);
+	glDeleteProgram(shaderSzines.shaderProgram);
 	printf("exit");
 }
 
@@ -1284,8 +1039,7 @@ void onDisplay() {
 	glutSwapBuffers();									// exchange the two buffers
 
 
-	if (camera.isFollowing)
-		camera.setCenter(star.cX, star.cY);
+
 }
 
 
@@ -1345,8 +1099,13 @@ void onIdle() {
 	}
 
 	///Gravitacio teszt
-	starfollower1.ujseb(sec);
-	starfollower2.ujseb(sec);
+	if (camera.isFollowing)
+		camera.setCenter(star.cX, star.cY);
+	if (catmull.cps.size() >= 3)
+	{
+		starfollower1.ujseb(sec);
+		starfollower2.ujseb(sec);
+	}
 	glutPostRedisplay();					// redraw the scene
 }
 
