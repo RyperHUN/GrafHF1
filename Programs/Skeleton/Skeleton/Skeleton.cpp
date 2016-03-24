@@ -309,7 +309,7 @@ vec4 mat4::operator*(const vec4& right)
 	return result;
 }
 
-class Shader2
+class Shader
 {
 	const char *vertexSource = R"(
 	#version 130
@@ -345,7 +345,7 @@ public:
 	//unsigned int vertexShaderID;  // Esetleg ezeket is eltárolni
 	//unsigned int fragmentShaderID;
 	// vertex shader in GLSL
-	Shader2()
+	Shader()
 	{
 	}
 
@@ -410,7 +410,7 @@ public:
 };
 // handle of the shader program
 
-Shader2 shaderSzines;
+Shader shaderSzines;
 
 // 2D camera
 struct Camera {
@@ -918,6 +918,7 @@ public:
 	}
 };
 Star star;
+
 class StarFollower : public Star
 {
 	vec4 r;
@@ -928,7 +929,7 @@ class StarFollower : public Star
 	const float m1 = 1;
 	const float m2 = 5;
 	const float surlodas = 0.4f;
-	const float MAXERTEK = 110;
+	const float MAXERTEK = 94;
 public:
 	void ujseb(float t)
 	{
@@ -991,8 +992,6 @@ public:
 	}
 };
 
-
-
 // The virtual world: collection of two objects
 StarFollower starfollower1;
 StarFollower starfollower2;
@@ -1003,7 +1002,7 @@ void onInitialization() {
 	// Create objects by setting up their vertex data on the GPU
 	shaderSzines.createShader();
 
-	catmull.create(0, 1, 0);
+	catmull.create(1, 1, 1);
 
 	starfollower1.create(0.7, 0.7, 0);
 	starfollower1.setCenter(-2.0f, 2.0f);
